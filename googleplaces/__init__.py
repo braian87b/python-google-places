@@ -114,7 +114,6 @@ def geocode_location(location, sensor=False, api_key=None):
     GooglePlacesError -- if the geocoder fails to find a location.
     """
     if location in locations_cache:
-        print ("============= OBTENIDO DE LA CACHE!!!! =============")
         return locations_cache[location]
     else:
         params = {'address': location, 'sensor': str(sensor).lower()}
