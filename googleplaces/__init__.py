@@ -97,6 +97,8 @@ def _fetch_remote_file(service_url, params=None, use_http_post=False):
     return (response.headers.get('content-type'),
             fn, response.read(), response.geturl())
 
+locations_cache = {}
+
 def geocode_location(location, sensor=False, api_key=None):
     """Converts a human-readable location to lat-lng.
 
@@ -111,17 +113,23 @@ def geocode_location(location, sensor=False, api_key=None):
     raises:
     GooglePlacesError -- if the geocoder fails to find a location.
     """
-    params = {'address': location, 'sensor': str(sensor).lower()}
-    if api_key is not None:
-        params['key'] = api_key
-    url, geo_response = _fetch_remote_json(
-            GooglePlaces.GEOCODE_API_URL, params)
-    _validate_response(url, geo_response)
-    if geo_response['status'] == GooglePlaces.RESPONSE_STATUS_ZERO_RESULTS:
-        error_detail = ('Lat/Lng for location \'%s\' can\'t be determined.' %
-                        location)
-        raise GooglePlacesError(error_detail)
-    return geo_response['results'][0]['geometry']['location']
+    if location in locations_cache:
+        print ("============= OBTENIDO DE LA CACHE!!!! =============")
+        return locations_cache[location]
+    else:
+        params = {'address': location, 'sensor': str(sensor).lower()}
+        if api_key is not None:
+            params['key'] = api_key
+        url, geo_response = _fetch_remote_json(
+                GooglePlaces.GEOCODE_API_URL, params)
+        _validate_response(url, geo_response)
+        if geo_response['status'] == GooglePlaces.RESPONSE_STATUS_ZERO_RESULTS:
+            error_detail = ('Lat/Lng for location \'%s\' can\'t be determined.' %
+                            location)
+            raise GooglePlacesError(error_detail)
+        response = geo_response['results'][0]['geometry']['location']
+        locations_cache.update({location: response})
+        return response
 
 def _get_place_details(place_id, api_key, sensor=False,
                        language=lang.ENGLISH):
